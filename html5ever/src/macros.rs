@@ -25,10 +25,20 @@ pub(crate) use unwrap_or_return;
 
 macro_rules! time {
     ($e:expr) => {{
+        #[cfg(target_arch = "wasm32")]
+        {
+            // Parser profiling is diagnostic only. Raw Cloudflare Worker
+            // WASM has no native std clock, so avoid importing one here.
+            let result = $e;
+            (result, 0)
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
         let t0 = ::std::time::Instant::now();
         let result = $e;
         let dt = t0.elapsed().as_nanos() as u64;
         (result, dt)
+        }
     }};
 }
 pub(crate) use time;
